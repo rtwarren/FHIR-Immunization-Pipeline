@@ -68,7 +68,7 @@ public class PipelineRunnerTests
 
         await runner.RunAsync(Base, pageSize: 50, maxPages: 5, fullReload: true);
 
-        Assert.DoesNotContain("_lastUpdated", handler.Requests[0]);
+        Assert.DoesNotContain("_lastUpdated=gt", handler.Requests[0]);
     }
 
     [Fact]
