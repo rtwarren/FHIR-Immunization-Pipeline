@@ -15,11 +15,11 @@ jobs:
         with:
           dotnet-version: 8.0.x
       - name: Restore
-        run: dotnet restore tests/FhirPipeline.Tests/FhirPipeline.Tests.csproj
+        run: dotnet restore tests/FHIRPipeline.Tests/FHIRPipeline.Tests.csproj
       - name: Build
-        run: dotnet build tests/FhirPipeline.Tests/FhirPipeline.Tests.csproj -c Release --no-restore
+        run: dotnet build tests/FHIRPipeline.Tests/FHIRPipeline.Tests.csproj -c Release --no-restore
       - name: Test
-        run: dotnet test tests/FhirPipeline.Tests/FhirPipeline.Tests.csproj -c Release --no-build --logger "console;verbosity=normal" --collect:"XPlat Code Coverage"
+        run: dotnet test tests/FHIRPipeline.Tests/FHIRPipeline.Tests.csproj -c Release --no-build --logger "console;verbosity=normal" --collect:"XPlat Code Coverage"
 
   sql:
     name: SQL Server schema and merge tests
@@ -44,17 +44,17 @@ jobs:
           done
           echo "SQL Server did not start"; exit 1
       - name: Create database
-        run: $SQLCMD -Q "CREATE DATABASE FhirPipeline;"
+        run: $SQLCMD -Q "CREATE DATABASE FHIRPipeline;"
       - name: Apply schema, procedures and views
         run: |
           for f in sql/01_schema.sql sql/02_procedures.sql sql/03_reporting_views.sql; do
             echo "Applying $f"
-            $SQLCMD -d FhirPipeline < "$f"
+            $SQLCMD -d FHIRPipeline < "$f"
           done
       - name: Re-apply to prove scripts are idempotent
         run: |
           for f in sql/01_schema.sql sql/02_procedures.sql sql/03_reporting_views.sql; do
-            $SQLCMD -d FhirPipeline < "$f"
+            $SQLCMD -d FHIRPipeline < "$f"
           done
       - name: Run SQL tests
-        run: $SQLCMD -d FhirPipeline < tests/sql/test_merge.sql
+        run: $SQLCMD -d FHIRPipeline < tests/sql/test_merge.sql
