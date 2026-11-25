@@ -12,7 +12,7 @@ SET NOCOUNT ON;
 GO
 
 CREATE OR ALTER PROCEDURE core.usp_MergePatient
-    @BatchId uniqueidentifier
+    @BatchID uniqueidentifier
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -23,25 +23,25 @@ BEGIN
     WITH latest AS
     (
         SELECT *,
-               ROW_NUMBER() OVER (PARTITION BY PatientId
-                                  ORDER BY LastUpdated DESC, VersionId DESC) AS rn
+               ROW_NUMBER() OVER (PARTITION BY PatientID
+                                  ORDER BY LastUpdated DESC, VersionID DESC) AS rn
         FROM stg.Patient
-        WHERE BatchId = @BatchId
+        WHERE BatchID = @BatchID
     )
     MERGE core.Patient AS tgt
     USING (SELECT * FROM latest WHERE rn = 1) AS src
-        ON tgt.PatientId = src.PatientId
+        ON tgt.PatientID = src.PatientID
     WHEN MATCHED AND (tgt.LastUpdated IS NULL OR src.LastUpdated > tgt.LastUpdated) THEN
-        UPDATE SET VersionId    = src.VersionId,
+        UPDATE SET VersionID    = src.VersionID,
                    LastUpdated  = src.LastUpdated,
                    Gender       = src.Gender,
                    BirthYear    = src.BirthYear,
                    PostalPrefix = src.PostalPrefix,
                    UpdatedAt    = SYSUTCDATETIME(),
-                   LastBatchId  = @BatchId
+                   LastBatchID  = @BatchID
     WHEN NOT MATCHED BY TARGET THEN
-        INSERT (PatientId, VersionId, LastUpdated, Gender, BirthYear, PostalPrefix, LastBatchId)
-        VALUES (src.PatientId, src.VersionId, src.LastUpdated, src.Gender, src.BirthYear, src.PostalPrefix, @BatchId)
+        INSERT (PatientID, VersionID, LastUpdated, Gender, BirthYear, PostalPrefix, LastBatchID)
+        VALUES (src.PatientID, src.VersionID, src.LastUpdated, src.Gender, src.BirthYear, src.PostalPrefix, @BatchID)
     OUTPUT $action INTO @changes;
 
     SELECT
@@ -52,7 +52,7 @@ END;
 GO
 
 CREATE OR ALTER PROCEDURE core.usp_MergeImmunization
-    @BatchId uniqueidentifier
+    @BatchID uniqueidentifier
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -63,18 +63,18 @@ BEGIN
     WITH latest AS
     (
         SELECT *,
-               ROW_NUMBER() OVER (PARTITION BY ImmunizationId
-                                  ORDER BY LastUpdated DESC, VersionId DESC) AS rn
+               ROW_NUMBER() OVER (PARTITION BY ImmunizationID
+                                  ORDER BY LastUpdated DESC, VersionID DESC) AS rn
         FROM stg.Immunization
-        WHERE BatchId = @BatchId
+        WHERE BatchID = @BatchID
     )
     MERGE core.Immunization AS tgt
     USING (SELECT * FROM latest WHERE rn = 1) AS src
-        ON tgt.ImmunizationId = src.ImmunizationId
+        ON tgt.ImmunizationID = src.ImmunizationID
     WHEN MATCHED AND (tgt.LastUpdated IS NULL OR src.LastUpdated > tgt.LastUpdated) THEN
-        UPDATE SET VersionId      = src.VersionId,
+        UPDATE SET VersionID      = src.VersionID,
                    LastUpdated    = src.LastUpdated,
-                   PatientId      = src.PatientId,
+                   PatientID      = src.PatientID,
                    Status         = src.Status,
                    VaccineSystem  = src.VaccineSystem,
                    VaccineCode    = src.VaccineCode,
@@ -85,26 +85,26 @@ BEGIN
                    Site           = src.Site,
                    PrimarySource  = src.PrimarySource,
                    UpdatedAt      = SYSUTCDATETIME(),
-                   LastBatchId    = @BatchId
+                   LastBatchID    = @BatchID
     WHEN NOT MATCHED BY TARGET THEN
-        INSERT (ImmunizationId, VersionId, LastUpdated, PatientId, Status, VaccineSystem, VaccineCode,
-                VaccineDisplay, OccurrenceDate, LotNumber, Route, Site, PrimarySource, LastBatchId)
-        VALUES (src.ImmunizationId, src.VersionId, src.LastUpdated, src.PatientId, src.Status, src.VaccineSystem,
+        INSERT (ImmunizationID, VersionID, LastUpdated, PatientID, Status, VaccineSystem, VaccineCode,
+                VaccineDisplay, OccurrenceDate, LotNumber, Route, Site, PrimarySource, LastBatchID)
+        VALUES (src.ImmunizationID, src.VersionID, src.LastUpdated, src.PatientID, src.Status, src.VaccineSystem,
                 src.VaccineCode, src.VaccineDisplay, src.OccurrenceDate, src.LotNumber, src.Route, src.Site,
-                src.PrimarySource, @BatchId)
+                src.PrimarySource, @BatchID)
     OUTPUT $action INTO @changes;
 
     DECLARE @inserted int = (SELECT COUNT(*) FROM @changes WHERE Action = N'INSERT');
     DECLARE @updated  int = (SELECT COUNT(*) FROM @changes WHERE Action = N'UPDATE');
 
-    UPDATE etl.LoadLog SET Inserted = @inserted, Updated = @updated WHERE BatchId = @BatchId;
+    UPDATE etl.LoadLog SET Inserted = @inserted, Updated = @updated WHERE BatchID = @BatchID;
 
     SELECT @inserted AS Inserted, @updated AS Updated;
 END;
 GO
 
 CREATE OR ALTER PROCEDURE etl.usp_CompleteLoad
-    @BatchId       uniqueidentifier,
+    @BatchID       uniqueidentifier,
     @Source        nvarchar(100),
     @Watermark     datetimeoffset(3) = NULL,
     @Pages         int,
@@ -134,6 +134,6 @@ BEGIN
         Immunizations = @Immunizations,
         Warnings      = @Warnings,
         Watermark     = @Watermark
-    WHERE BatchId = @BatchId;
+    WHERE BatchID = @BatchID;
 END;
 GO

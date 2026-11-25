@@ -18,9 +18,9 @@ GO
 IF OBJECT_ID(N'stg.Patient', N'U') IS NULL
 CREATE TABLE stg.Patient
 (
-    BatchId       uniqueidentifier NOT NULL,
-    PatientId     nvarchar(64)     NOT NULL,
-    VersionId     nvarchar(64)     NULL,
+    BatchID       uniqueidentifier NOT NULL,
+    PatientID     nvarchar(64)     NOT NULL,
+    VersionID     nvarchar(64)     NULL,
     LastUpdated   datetimeoffset(3) NULL,
     Gender        nvarchar(16)     NULL,
     BirthYear     smallint         NULL,
@@ -31,11 +31,11 @@ GO
 IF OBJECT_ID(N'stg.Immunization', N'U') IS NULL
 CREATE TABLE stg.Immunization
 (
-    BatchId         uniqueidentifier NOT NULL,
-    ImmunizationId  nvarchar(64)     NOT NULL,
-    VersionId       nvarchar(64)     NULL,
+    BatchID         uniqueidentifier NOT NULL,
+    ImmunizationID  nvarchar(64)     NOT NULL,
+    VersionID       nvarchar(64)     NULL,
     LastUpdated     datetimeoffset(3) NULL,
-    PatientId       nvarchar(64)     NOT NULL,
+    PatientID       nvarchar(64)     NOT NULL,
     Status          nvarchar(32)     NOT NULL,
     VaccineSystem   nvarchar(256)    NULL,
     VaccineCode     nvarchar(64)     NULL,
@@ -54,15 +54,15 @@ IF OBJECT_ID(N'core.Patient', N'U') IS NULL
 CREATE TABLE core.Patient
 (
     PatientKey    int IDENTITY(1,1) NOT NULL CONSTRAINT PK_core_Patient PRIMARY KEY,
-    PatientId     nvarchar(64)      NOT NULL CONSTRAINT UQ_core_Patient_PatientId UNIQUE,
-    VersionId     nvarchar(64)      NULL,
+    PatientID     nvarchar(64)      NOT NULL CONSTRAINT UQ_core_Patient_PatientId UNIQUE,
+    VersionID     nvarchar(64)      NULL,
     LastUpdated   datetimeoffset(3) NULL,
     Gender        nvarchar(16)      NULL,
     BirthYear     smallint          NULL,
     PostalPrefix  nvarchar(3)       NULL,
     InsertedAt    datetime2(3)      NOT NULL CONSTRAINT DF_core_Patient_InsertedAt DEFAULT SYSUTCDATETIME(),
     UpdatedAt     datetime2(3)      NULL,
-    LastBatchId   uniqueidentifier  NOT NULL
+    LastBatchID   uniqueidentifier  NOT NULL
 );
 GO
 
@@ -70,10 +70,10 @@ IF OBJECT_ID(N'core.Immunization', N'U') IS NULL
 CREATE TABLE core.Immunization
 (
     ImmunizationKey int IDENTITY(1,1) NOT NULL CONSTRAINT PK_core_Immunization PRIMARY KEY,
-    ImmunizationId  nvarchar(64)      NOT NULL CONSTRAINT UQ_core_Immunization_ImmunizationId UNIQUE,
-    VersionId       nvarchar(64)      NULL,
+    ImmunizationID  nvarchar(64)      NOT NULL CONSTRAINT UQ_core_Immunization_ImmunizationId UNIQUE,
+    VersionID       nvarchar(64)      NULL,
     LastUpdated     datetimeoffset(3) NULL,
-    PatientId       nvarchar(64)      NOT NULL,
+    PatientID       nvarchar(64)      NOT NULL,
     Status          nvarchar(32)      NOT NULL,
     VaccineSystem   nvarchar(256)     NULL,
     VaccineCode     nvarchar(64)      NULL,
@@ -85,12 +85,12 @@ CREATE TABLE core.Immunization
     PrimarySource   bit               NULL,
     InsertedAt      datetime2(3)      NOT NULL CONSTRAINT DF_core_Immunization_InsertedAt DEFAULT SYSUTCDATETIME(),
     UpdatedAt       datetime2(3)      NULL,
-    LastBatchId     uniqueidentifier  NOT NULL
+    LastBatchID     uniqueidentifier  NOT NULL
 );
 GO
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_core_Immunization_PatientId')
-CREATE INDEX IX_core_Immunization_PatientId ON core.Immunization (PatientId) INCLUDE (VaccineCode, OccurrenceDate, Status);
+CREATE INDEX IX_core_Immunization_PatientId ON core.Immunization (PatientID) INCLUDE (VaccineCode, OccurrenceDate, Status);
 GO
 
 /* ---------- etl ---------- */
@@ -107,7 +107,7 @@ GO
 IF OBJECT_ID(N'etl.LoadLog', N'U') IS NULL
 CREATE TABLE etl.LoadLog
 (
-    BatchId        uniqueidentifier NOT NULL CONSTRAINT PK_etl_LoadLog PRIMARY KEY,
+    BatchID        uniqueidentifier NOT NULL CONSTRAINT PK_etl_LoadLog PRIMARY KEY,
     Source         nvarchar(100)    NOT NULL,
     StartedAt      datetime2(3)     NOT NULL CONSTRAINT DF_etl_LoadLog_StartedAt DEFAULT SYSUTCDATETIME(),
     CompletedAt    datetime2(3)     NULL,

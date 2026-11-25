@@ -11,7 +11,7 @@ SELECT
     COALESCE(i.VaccineDisplay, i.VaccineCode, N'(uncoded)')            AS Vaccine,
     i.VaccineCode,
     COUNT(*)                                                          AS Doses,
-    COUNT(DISTINCT i.PatientId)                                       AS People
+    COUNT(DISTINCT i.PatientID)                                       AS People
 FROM core.Immunization AS i
 WHERE i.Status = N'completed'
   AND i.OccurrenceDate IS NOT NULL
@@ -25,7 +25,7 @@ CREATE OR ALTER VIEW core.vw_ImmunizationsMissingPatient
 AS
 -- Immunizations whose patient was not returned by _include; usually a permissions
 -- or paging issue on the source server, worth monitoring.
-SELECT i.ImmunizationId, i.PatientId, i.LastUpdated
+SELECT i.ImmunizationID, i.PatientID, i.LastUpdated
 FROM core.Immunization AS i
-WHERE NOT EXISTS (SELECT 1 FROM core.Patient AS p WHERE p.PatientId = i.PatientId);
+WHERE NOT EXISTS (SELECT 1 FROM core.Patient AS p WHERE p.PatientID = i.PatientID);
 GO
