@@ -1,4 +1,4 @@
-# fhir-immunization-pipeline
+# FHIR-Immunization-Pipeline
 
 An incremental ETL pipeline that pulls `Immunization` and `Patient` resources from any FHIR R4 server and loads them into SQL Server for reporting.
 
@@ -9,7 +9,7 @@ It is built the way a production public health pipeline needs to be: incremental
 ```
 FHIR R4 server                 C# (.NET 8)                        SQL Server
 ---------------                -----------                        ----------
-GET /Immunization      -->     FhirClient                 -->     stg.Patient
+GET /Immunization      -->     FHIRClient                 -->     stg.Patient
   ?_include=                     paging via Bundle.link             stg.Immunization
    Immunization:patient          retry on 429 / 5xx                     |
   &_lastUpdated=gt{wm}         BundleParser                             | core.usp_Merge*
@@ -38,7 +38,7 @@ GET /Immunization      -->     FhirClient                 -->     stg.Patient
 | First 3 characters of postal code | Street address, telecom |
 | Vaccine code, date, status, lot, route, site | Free-text notes |
 
-**Explicit FHIR mapping.** Parsing uses `System.Text.Json` directly rather than a full FHIR SDK, so every mapping from FHIR element to column is visible in one file ([`BundleParser.cs`](src/FhirPipeline/BundleParser.cs)). It handles:
+**Explicit FHIR mapping.** Parsing uses `System.Text.Json` directly rather than a full FHIR SDK, so every mapping from FHIR element to column is visible in one file ([`BundleParser.cs`](src/FHIRPipeline/BundleParser.cs)). It handles:
 
 - searchset bundles (server search results) and transaction bundles (for example Synthea output)
 - patient references as `Patient/123`, `Patient/123/_history/2`, absolute URLs, and `urn:uuid:` with fullUrl resolution
@@ -50,7 +50,7 @@ GET /Immunization      -->     FhirClient                 -->     stg.Patient
 ### Dry run against the public HAPI test server (no database)
 
 ```bash
-dotnet run --project src/FhirPipeline -- --dry-run --page-size 50 --max-pages 3
+dotnet run --project src/FHIRPipeline -- --dry-run --page-size 50 --max-pages 3
 ```
 
 The public HAPI server holds test data only. Do not send real patient data to it.
@@ -62,14 +62,14 @@ export MSSQL_SA_PASSWORD='<choose a strong password>'
 docker compose up -d
 
 # create the database and objects
-docker compose exec sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -Q "CREATE DATABASE FhirPipeline"
+docker compose exec sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -Q "CREATE DATABASE FHIRPipeline"
 for f in sql/01_schema.sql sql/02_procedures.sql sql/03_reporting_views.sql; do
-  docker compose exec -T sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -b -d FhirPipeline < "$f"
+  docker compose exec -T sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -b -d FHIRPipeline < "$f"
 done
 
-export FHIR_PIPELINE_CONNECTION="Server=localhost;Database=FhirPipeline;User Id=sa;Password=$MSSQL_SA_PASSWORD;TrustServerCertificate=true"
-dotnet run --project src/FhirPipeline -- --max-pages 5      # first run: full load
-dotnet run --project src/FhirPipeline -- --max-pages 5      # later runs: incremental
+export FHIR_PIPELINE_CONNECTION="Server=localhost;Database=FHIRPipeline;User ID=sa;Password=$MSSQL_SA_PASSWORD;TrustServerCertificate=true"
+dotnet run --project src/FHIRPipeline -- --max-pages 5      # first run: full load
+dotnet run --project src/FHIRPipeline -- --max-pages 5      # later runs: incremental
 ```
 
 ### Options
@@ -100,7 +100,7 @@ All scripts are idempotent and can be re-applied safely.
 ## Tests
 
 ```bash
-dotnet test tests/FhirPipeline.Tests
+dotnet test tests/FHIRPipeline.Tests
 ```
 
 - **Unit tests** (xUnit): bundle parsing and minimization, reference resolution, date handling, paging, retry and backoff, watermark logic, CLI validation
@@ -109,8 +109,8 @@ dotnet test tests/FhirPipeline.Tests
 ## Project layout
 
 ```
-src/FhirPipeline/         console app: client, parser, runner, sinks
-tests/FhirPipeline.Tests/ xUnit tests with synthetic FHIR bundles
+src/FHIRPipeline/         console app: client, parser, runner, sinks
+tests/FHIRPipeline.Tests/ xUnit tests with synthetic FHIR bundles
 sql/                      schema, merge procedures, reporting views
 tests/sql/                SQL integration tests
 ```
